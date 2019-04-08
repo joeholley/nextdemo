@@ -1,0 +1,406 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: om-backendapi
+spec:
+  selector:
+    app: openmatch
+    component: backend
+  ports:
+  - protocol: TCP
+    port: 50505
+    targetPort: grpc
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: om-backendapi
+  labels:
+    app: openmatch
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openmatch
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: openmatch
+        component: backend
+    spec:
+      containers:
+      - name: om-backend
+        image: gcr.io/omag-demo/openmatch-backendapi:0.4 
+        imagePullPolicy: Always
+        env:
+        - name: REDIS_USER
+          valueFrom:
+            secretKeyRef:
+              name: om-secret
+              key: redis.user
+              optional: true
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: om-secret
+              key: redis.password
+              optional: true
+        ports:
+        - name: grpc
+          containerPort: 50505
+        - name: metrics
+          containerPort: 9555
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 100m
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config/
+      volumes:
+      - name: config
+        configMap:
+          name: om-configmap-debug-off
+          items:
+          - key: om-configmap-debug-off.yaml
+            path: matchmaker_config.yaml
+#        volumeMounts:
+#        - name: om-configmap
+#          subPath: matchmaker_config.yaml
+#          mountPath: matchmaker_config.yaml
+#      volumes:
+#      - name: om-configmap
+#        configMap:
+#          name: om-configmap
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: om-frontendapi
+spec:
+  selector:
+    app: openmatch
+    component: frontend
+  ports:
+  - protocol: TCP
+    port: 50504
+    targetPort: grpc
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: om-frontendapi
+  labels:
+    app: openmatch
+    component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openmatch
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: openmatch
+        component: frontend
+    spec:
+      containers:
+      - name: om-frontendapi
+        image: gcr.io/omag-demo/openmatch-frontendapi:nextdemo 
+        imagePullPolicy: Always
+        env:
+        - name: REDIS_USER
+          valueFrom:
+            secretKeyRef:
+              name: om-secret
+              key: redis.user
+              optional: true
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: om-secret
+              key: redis.password
+              optional: true
+        ports:
+        - name: grpc
+          containerPort: 50504
+        - name: metrics
+          containerPort: 9555
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 100m
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config/
+      volumes:
+      - name: config
+        configMap:
+          name: om-configmap-debug-off
+          items:
+          - key: om-configmap-debug-off.yaml
+            path: matchmaker_config.yaml
+#        volumeMounts:
+#        - name: om-configmap
+#          subPath: matchmaker_config.yaml
+#          mountPath: matchmaker_config.yaml
+#      volumes:
+#      - name: om-configmap
+#        configMap:
+#          name: om-configmap
+#---
+#apiVersion: rbac.authorization.k8s.io/v1beta1
+#kind: ClusterRoleBinding
+#metadata:
+#  name: mmf-sa
+#subjects:
+#- kind: ServiceAccount
+#  name: default
+#  namespace: default
+#roleRef:
+#  kind: ClusterRole
+#  name: cluster-admin
+#  apiGroup: rbac.authorization.k8s.io
+#---
+#apiVersion: extensions/v1beta1
+#kind: Deployment
+#metadata:
+#  name: om-mmforc
+#  labels:
+#    app: openmatch
+#    component: mmforc
+#spec:
+#  replicas: 1
+#  selector:
+#    matchLabels:
+#      app: openmatch
+#      component: mmforc
+#  template:
+#    annotations:
+#        prometheus.io/scrape: "true"
+#        prometheus.io/port: 9555
+#        prometheus.io/path: "/metrics"
+#    metadata:
+#      labels:
+#        app: openmatch
+#        component: mmforc
+#    spec:
+#      containers:
+#      - name: om-mmforc
+#        image: gcr.io/matchmaker-dev-201405/openmatch-mmforc:0.4
+#        imagePullPolicy: Always
+#        env:
+#        - name: METADATA_NAMESPACE
+#          valueFrom:
+#            fieldRef:
+#              fieldPath: metadata.namespace
+#        - name: REDIS_CREDENTIALS_SECRET_NAME
+#          value: om-secret
+#        - name: REDIS_CREDENTIALS_SECRET_USER_KEY
+#          value: redis.user
+#        - name: REDIS_CREDENTIALS_SECRET_PASSWORD_KEY
+#          value: redis.password
+#        - name: REDIS_USER
+#          valueFrom:
+#            secretKeyRef:
+#              name: om-secret
+#              key: redis.user
+#              optional: true
+#        - name: REDIS_PASSWORD
+#          valueFrom:
+#            secretKeyRef:
+#              name: om-secret
+#              key: redis.password
+#              optional: true
+#        volumeMounts:
+#        - name: om-configmap
+#          subPath: matchmaker_config.yaml
+#          mountPath: matchmaker_config.yaml
+#        ports:
+#        - name: metrics
+#          containerPort: 9555
+#        resources:
+#          requests:
+#            memory: 100Mi
+#            cpu: 100m
+#      volumes:
+#      - name: om-configmap
+#        configMap:
+#          name: om-configmap
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: om-mmlogicapi
+  labels:
+    app: openmatch
+    component: mmlogic
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openmatch
+      component: mmlogic
+  template:
+    metadata:
+      labels:
+        app: openmatch
+        component: mmlogic
+    spec:
+      containers:
+      - name: om-mmlogic
+        image: gcr.io/omag-demo/openmatch-mmlogicapi:0.4 
+        imagePullPolicy: Always
+        env:
+        - name: REDIS_USER
+          valueFrom:
+            secretKeyRef:
+              name: om-secret
+              key: redis.user
+              optional: true
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: om-secret
+              key: redis.password
+              optional: true
+        ports:
+        - name: grpc
+          containerPort: 50503
+        - name: metrics
+          containerPort: 9555
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 100m
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config/
+      volumes:
+      - name: config
+        configMap:
+          name: om-configmap-debug-off
+          items:
+          - key: om-configmap-debug-off.yaml
+            path: matchmaker_config.yaml
+#        volumeMounts:
+#        - name: om-configmap
+#          subPath: matchmaker_config.yaml
+#          mountPath: matchmaker_config.yaml
+#      volumes:
+#      - name: om-configmap
+#        configMap:
+#          name: om-configmap
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: om-mmlogicapi
+spec:
+  selector:
+    app: openmatch
+    component: mmlogic
+  ports:
+  - protocol: TCP
+    port: 50503
+    targetPort: grpc
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: om-function
+spec:
+  selector:
+    app: openmatch
+    component: function 
+  ports:
+  - protocol: TCP
+    port: 50502
+    targetPort: grpc
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: om-functionapi
+  labels:
+    app: openmatch
+    component: function
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openmatch
+      component: function
+  template:
+    metadata:
+      labels:
+        app: openmatch
+        component: function
+    spec:
+      containers:
+      - name: om-function
+        image: gcr.io/omag-demo/openmatch-mmf-golang-serving-mmlogic-simple:0.4
+        imagePullPolicy: Always
+        ports:
+        - name: grpc
+          containerPort: 50502
+        - name: metrics
+          containerPort: 9555
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 100m
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config/
+      volumes:
+      - name: config
+        configMap:
+          name: om-configmap-debug-off
+          items:
+          - key: om-configmap-debug-off.yaml
+            path: matchmaker_config.yaml
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: om-evaluator
+  labels:
+    app: openmatch
+    component: evaluator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openmatch
+      component: evaluator
+  template:
+    metadata:
+      labels:
+        app: openmatch
+        component: evaluator
+    spec:
+      containers:
+      - name: om-evaluator
+        image: gcr.io/omag-demo/openmatch-evaluator-service:nextdemo 
+        imagePullPolicy: Always
+        ports:
+        - name: metrics
+          containerPort: 9555
+        resources:
+          requests:
+            memory: 100Mi
+            cpu: 100m
+        volumeMounts:
+        - name: config
+          mountPath: /etc/config/
+      volumes:
+      - name: config
+        configMap:
+          name: om-configmap-debug-off
+          items:
+          - key: om-configmap-debug-off.yaml
+            path: matchmaker_config.yaml
