@@ -16,8 +16,7 @@ kubectl delete pod udp-client 2>/dev/null  &
 # Headless clients forever, show it autoscaling
 kubectl run --rm --restart=Never --image-pull-policy=Always \
   -i --tty --image=gcr.io/omag-demo/openmatch-clientloadgen:nextdemo headlessclient \
-  --command ./clientloadgen -- -numplayers 2 -cycles 18 -sleep 5000 2>/dev/null &
+  --command ./clientloadgen -- -numplayers 2 -cycles 18 -sleep 5000 1>/dev/null 2>&1 &
+read -n 1 -p "Headless clients queuing for matching.  Press enter to monitor Agones autoscaling..."
 
 watch kubectl get fleet udp-server
-
-kubectl delete pod headlessclient 2>/dev/null &

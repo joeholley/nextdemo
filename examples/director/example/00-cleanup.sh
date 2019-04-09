@@ -9,3 +9,4 @@ done
 kubectl run --rm --restart=Never --image-pull-policy=Always \
  -i --tty --image=redis rclean \
   --command redis-cli -- -h redis FLUSHALL
+kubectl delete pod headlessclient 
