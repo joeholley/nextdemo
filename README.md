@@ -6,6 +6,10 @@ These are the YAML files used for the Open Match and OMAG demos in the Cloud Nex
 
 These files are provided as-is, for reference only. They do not represent best practices or how you should set up an Open Match cluster or anything like that.  They are just the files used in the demo, nothing more, nothing less.  Don't use these if you don't know what they do, and I accept no responsibility for the effects of them if you elect to use them.
 
+## Contributing
+
+This is an archived repository, and will not accept PRs.
+
 ## Commands
   
 Here is a copy-paste of the commands cheat-sheet referenced while on stage.  This is not a script or a list of things to run in order to get the demo to execute, it's just a list of commands that are useful when using these demo materials in roughly the order they are useful.
